@@ -165,7 +165,7 @@ if(cmp_lsp_status and lspconfig_status) then
       rootMarkers = {'.git/'},
       languages = {
         sql = {
-            {formatCommand = 'sqlformat -a -k upper -s - && echo', formatStdin = true}
+            {formatCommand = '(sqlformat -a -k upper -s - && echo)', formatStdin = true}
         }
       }
     }
