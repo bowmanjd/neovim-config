@@ -51,6 +51,8 @@ require 'paq' {
   'nvim-telescope/telescope.nvim';
   'lewis6991/gitsigns.nvim';
   'nvim-treesitter/nvim-treesitter';
+	'onsails/lspkind-nvim';
+	-- 'akinsho/flutter-tools.nvim';
   -- 'lukas-reineke/indent-blankline.nvim';
 }
 
@@ -88,7 +90,17 @@ end
 
 local ll_status, lualine = pcall(require, "lualine")
 if(ll_status) then
-  lualine.setup()
+  lualine.setup{
+		tabline = {
+			lualine_a = {
+				'buffers',
+				buffers_color = {
+					active = '#5c5c5c',
+					inactive = '#252525',
+				},
+			},
+		},
+	}
 end
 
 local gs_status, gitsigns = pcall(require, "lualine")
@@ -121,23 +133,23 @@ if(cmp_status) then
   })
 end
 
+local on_attach = function(client, bufnr)
+	local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
+	local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
+	local opts = { noremap=true, silent=true }
+	buf_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)
+	buf_set_keymap('n', '<space>]', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
+end
+
+
 -- Setup lspconfig.
 local cmp_lsp_status, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
 local lspconfig_status, lspconfig = pcall(require, "lspconfig")
 if(cmp_lsp_status and lspconfig_status) then
-  local capabilities = cmp_nvim_lsp.update_capabilities(vim.lsp.protocol.make_client_capabilities())
 
-  local on_attach = function(client, bufnr)
-    local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
-    local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
-    local opts = { noremap=true, silent=true }
-    buf_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)
-  end
+	local capabilities = cmp_nvim_lsp.update_capabilities(vim.lsp.protocol.make_client_capabilities())
+
   lspconfig.bashls.setup {
-    capabilities = capabilities,
-    on_attach = on_attach
-  }
-  lspconfig.dartls.setup {
     capabilities = capabilities,
     on_attach = on_attach
   }
@@ -146,6 +158,10 @@ if(cmp_lsp_status and lspconfig_status) then
     on_attach = on_attach
   }
   lspconfig.jsonls.setup {
+    capabilities = capabilities,
+    on_attach = on_attach
+  }
+  lspconfig.dartls.setup {
     capabilities = capabilities,
     on_attach = on_attach
   }
@@ -161,6 +177,7 @@ if(cmp_lsp_status and lspconfig_status) then
     capabilities = capabilities,
     on_attach = on_attach,
     init_options = {documentFormatting = true},
+		filetypes = {'sql','json'},
     settings = {
       rootMarkers = {'.git/'},
       languages = {
@@ -171,3 +188,24 @@ if(cmp_lsp_status and lspconfig_status) then
     }
   }
 end
+
+-- local flutter_status, flutter = pcall(require, 'flutter-tools')
+-- if(flutter_status) then
+-- 	flutter.setup{
+-- 		lsp = {
+-- 			on_attach = on_attach,
+-- 			capabilities = capabilities,
+-- 		}
+-- 	}
+-- end
+
+local lspkind_status, lspkind = pcall(require, "lspkind")
+if(lspkind_status and cmp_status) then
+	cmp.setup {
+		formatting = {
+			format = lspkind.cmp_format({with_text = true})
+		}
+	}
+end
+
+
